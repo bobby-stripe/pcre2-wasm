@@ -30,6 +30,7 @@ It would be nice for TurboFan to look at the WebAssembly for `pcre2_match()` and
 
 * TurboFan page: https://v8.dev/docs/turbofan
 * Liftoff page (which discusses the tiering up of the different compilation passes): https://v8.dev/blog/liftoff
+* A fun dive into TurbFan: https://doar-e.github.io/blog/2019/01/28/introduction-to-turbofan/
 
 ---
 
