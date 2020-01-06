@@ -2,7 +2,7 @@
 
 This repo is branch of [stephen-riley/pcre](https://github.com/stephen-riley/pcre/tree/master) that exposes an issue in the TurboFan compiler.
 
-Short version: after compiling [PCRE2](https://pcre.org/) to WebAssembly using emscripten, when TurboFan optimizes the `pcre2_match()` function, it takes 6-7 seconds to complete with `-O3`, and 80-90 seconds with `-O3` on a 2.3GHz Core i9.  
+Short version: after compiling [PCRE2](https://pcre.org/) to WebAssembly using emscripten, when TurboFan optimizes the `pcre2_match()` function, it takes 6-7 seconds to complete with `-O3`, and 80-90 seconds with `-O0` on a 2.3GHz Core i9.  
 
 The most obvious effect is if you were to run a quick node.js script that used this library, you would see your code execute right away (thanks to the first pass of wasm compilation by the Liftoff stage of v8), but then the node process would just hang out until TurboFan completed its work--and _then_ the node process would end.
 
