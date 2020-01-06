@@ -1,12 +1,20 @@
-# pcre
+# TurboFan compiler bug demo
 
-Perl compatible regular expressions for JavaScript
+This repo is branch of stephen-riley/pcre that exposes an issue in the TurboFan compiler.
 
-## Installation
+Short version: after compiling [PCRE2](https://pcre.org/) to WebAssembly using emscripten, when TurboFan optimizes the `pcre2_study()` , it takes 6-7 seconds to complete with `-O3`, and 80-90 seconds with `-O3`!
+
+## Repro
+
+After cloning the repo:
 
 ```bash
-npm install @desertnet/pcre
+npm install && npm run build
+
+node --trace-turbo dist/libpcre2.js
 ```
+
+
 
 ## Usage
 

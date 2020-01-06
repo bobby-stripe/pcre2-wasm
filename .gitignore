@@ -67,3 +67,7 @@ build
 
 # for experiments
 tmp/
+
+# ignore TurboFan tracing files
+turbo-*.cfg
+turbo-*.json

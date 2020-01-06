@@ -2,7 +2,7 @@
 # Download and build PCRE2 library
 # ----------------------------------------------------------------------
 
-PCRE2_VERSION=10.31
+PCRE2_VERSION=10.34
 PCRE2_TARBALL_URL=https://ftp.pcre.org/pub/pcre/pcre2-$(PCRE2_VERSION).tar.bz2
 
 # ----------------------------------------------------------------------
@@ -29,10 +29,11 @@ build/local/include/pcre2.h build/local/lib/libpcre2-16.a: build/pcre2-$(PCRE2_V
 	$(EMSCRIPTEN_DOCKER_RUN) sh -c " \
 	  cd pcre2-$(PCRE2_VERSION) \
 		&& emconfigure ./configure --prefix=/src/local \
-		                          --disable-pcre2-8 \
-			  											--enable-pcre2-16 \
-															--disable-jit \
-															--with-heap-limit=2000000 \
+		                           --disable-pcre2-8 \
+			  					   --enable-pcre2-16 \
+								   --disable-jit \
+								   --with-heap-limit=2000000 \
+								   --enable-debug \
 		&& emmake make \
 		&& emmake make install \
 	"
