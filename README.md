@@ -1,8 +1,14 @@
-# TurboFan compiler bug demo
+# TurboFan compiler issue/bug demo
 
-This repo is branch of stephen-riley/pcre that exposes an issue in the TurboFan compiler.
+This repo is branch of [stephen-riley/pcre](https://github.com/stephen-riley/pcre/tree/master) that exposes an issue in the TurboFan compiler.
 
-Short version: after compiling [PCRE2](https://pcre.org/) to WebAssembly using emscripten, when TurboFan optimizes the `pcre2_study()` , it takes 6-7 seconds to complete with `-O3`, and 80-90 seconds with `-O3`!
+Short version: after compiling [PCRE2](https://pcre.org/) to WebAssembly using emscripten, when TurboFan optimizes the `pcre2_match()` function, it takes 6-7 seconds to complete with `-O3`, and 80-90 seconds with `-O3` on a 2.3GHz Core i9.  
+
+The most obvious effect is if you were to run a quick node.js script that used this library, you would see your code execute right away (thanks to the first pass of wasm compilation by the Liftoff stage of v8), but then the node process would just hang out until TurboFan completed its work--and _then_ the node process would end.
+
+"The juice ain't worth the squeeze", as it were.  
+
+Interesting note: _all_ WebAssembly functions are processed by TurboFan immediately after Liftoff (what the V8 teams calls _eager tier-up), instead of what's done for Javascript: profiling execution with the interpreter from Ignition's first pass.  You'll see the difference if you execute the repro command below with `--wasm-interpret-all` since TurboFan is bypassed altogether.
 
 ## Repro
 
@@ -14,15 +20,28 @@ npm install && npm run build
 node --trace-turbo dist/libpcre2.js
 ```
 
+(**Note:** as of this commit, `pcre2_match()` ends up being function #11 in the `.wast` file, so you can filter for it with `--trace-turbo-filter="wasm-function#11"`, but YMMV).
 
+## Desired behavior
 
-## Usage
+It would be nice for TurboFan to look at the WebAssembly for `pcre2_match()` and throw its hands up (much like you'll do when you look at the `.wast` file for it 😆).  At the very least, I'd like an option to mark this function as not-to-be-optimized by TurboFan.  Not sure what the right answer is here. 🤔
+
+## Reading
+
+* TurboFan page: https://v8.dev/docs/turbofan
+* Liftoff page (which discusses the tiering up of the different compilation passes): https://v8.dev/blog/liftoff
+
+---
+
+## Old README
+
+### Usage
 
 Internally this module uses the [PCRE2](https://pcre.org/) library, running
 in a WebAssembly instance. This has a side effect of requiring you do
 a few unusual things when using this module:
 
-### Initialization
+#### Initialization
 
 Before calling any constructors or methods, you must first asynchronously initialize the module by calling `init`.
 
@@ -37,7 +56,7 @@ async function main () {
 main()
 ```
 
-### Memory Management
+#### Memory Management
 
 When you create a new `PCRE` instance, you are allocating memory within the
 WebAssembly instance. Currently, there are no hooks in JavaScript that
@@ -46,23 +65,23 @@ collected by the JavaScript runtime. This means that in order to prevent
 memory leaks, you must call `.destroy()` on a `PCRE` instance when it
 is no longer needed.
 
-## API
+### API
 
 ```javascript
 import PCRE from '@desertnet/pcre'
 ```
 
-### PCRE.init()
+#### PCRE.init()
 
 Initializes the module, returning a Promise that is resolved once
 initialization is complete. You must call this at least once and await the
 returned Promise before calling any other `PCRE` methods or constructors.
 
-### PCRE.version()
+#### PCRE.version()
 
 Returns a string with the PCRE2 version information.
 
-### new PCRE(pattern, flags)
+#### new PCRE(pattern, flags)
 
 Creates a new PCRE instance, using `pcre2_compile()` to compile `pattern`,
 using `flags` as the compile options. You must call `.destroy()` on the
@@ -100,17 +119,17 @@ catch (err) {
 }
 ```
 
-## re.destroy()
+### re.destroy()
 
 Releases the memory allocated in the WebAssembly instance. You must call this
 method manually once you no longer have a need for the instance, or else
 your program will leak memory.
 
-## Contributing
+### Contributing
 
 Prerequisites for development include Docker, make and curl.
 
-## Credits
+### Credits
 
 This is a fork of [desertnet/pcre](https://github.com/desertnet/pcre), which provided
 the emscripten framework and initial API exposure of PCRE2.  Many thanks!
