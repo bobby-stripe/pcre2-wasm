@@ -20,7 +20,7 @@ npm install && npm run build
 node --trace-turbo dist/libpcre2.js
 ```
 
-(**Note:** as of this commit, `pcre2_match()` ends up being function #11 in the `.wast` file, so you can filter for it with `--trace-turbo-filter="wasm-function#11"`, but YMMV).
+You'll notice that one function at the very end takes a while to finish compilation.  You can trace back into `dist/libpcre2.wast` to find which one.  Play with the optimization level in `./Makefile` to see how that affects TurboFan compile times and `.wast` output, too.
 
 ## Desired behavior
 
