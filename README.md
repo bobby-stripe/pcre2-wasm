@@ -1,6 +1,6 @@
 # TurboFan compiler issue/bug demo
 
-This repo is branch of [stephen-riley/pcre](https://github.com/stephen-riley/pcre/tree/master) that exposes an issue in the TurboFan compiler.
+This repo is branch of [stephen-riley/pcre2-wasm](https://github.com/stephen-riley/pcre2-wasm/tree/master) that exposes an issue in the TurboFan compiler.
 
 Short version: after compiling [PCRE2](https://pcre.org/) to WebAssembly using emscripten, when TurboFan optimizes the `pcre2_match()` function, it takes 6-7 seconds to complete with `-O3`, and 80-90 seconds with `-O0` on a 2.3GHz Core i9.  
 
