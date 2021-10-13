@@ -1,6 +1,6 @@
 #include <emscripten/emscripten.h>
 
-#define PCRE2_CODE_UNIT_WIDTH 16
+#define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
 // --------------------------------------------------------------------
@@ -9,7 +9,7 @@ static int _lastErrorCode = 0;
 static PCRE2_SIZE _lastErrorOffset = 0;
 
 EMSCRIPTEN_KEEPALIVE
-PCRE2_SIZE lastErrorMessage(uint16_t *buffer, size_t bufferLength)
+PCRE2_SIZE lastErrorMessage(uint8_t *buffer, size_t bufferLength)
 {
   // Going to trust that buffer is large enough for all messages, because
   // we are the only callers of this function, and we also know that
@@ -29,37 +29,13 @@ PCRE2_SIZE lastErrorOffset()
 
 EMSCRIPTEN_KEEPALIVE
 pcre2_code *compile(
-    uint16_t *pattern,
+    uint8_t *pattern,
     PCRE2_SIZE length,
-    char *flags)
+    uint32_t options)
 {
   // Clear any previous error codes.
   _lastErrorOffset = 0;
   _lastErrorCode = 0;
-
-  // Convert flags to PCRE2 options bitfield
-  int options = PCRE2_UTF;
-  for (int i = 0; flags[i] != 0; i++)
-  {
-    switch (flags[i])
-    {
-    case 'm':
-      options |= PCRE2_MULTILINE;
-      break;
-    case 's':
-      options |= PCRE2_DOTALL;
-      break;
-    case 'i':
-      options |= PCRE2_CASELESS;
-      break;
-    case 'x':
-      options |= PCRE2_EXTENDED;
-      break;
-    default:
-      _lastErrorCode = PCRE2_ERROR_BAD_OPTIONS;
-      return NULL;
-    }
-  }
 
   return pcre2_compile(
       pattern, length, options,
@@ -67,10 +43,33 @@ pcre2_code *compile(
       NULL);
 }
 
+
+EMSCRIPTEN_KEEPALIVE
+uint32_t groupCount(const pcre2_code *code)
+{
+  int count = 0;
+  pcre2_pattern_info(code, PCRE2_INFO_CAPTURECOUNT, &count);
+  return count;
+}
+
+EMSCRIPTEN_KEEPALIVE
+uint32_t patternSize(const pcre2_code *code)
+{
+  int size = 0;
+  pcre2_pattern_info(code, PCRE2_INFO_SIZE, &size);
+  return size;
+}
+
 EMSCRIPTEN_KEEPALIVE
 void destroyCode(pcre2_code *code)
 {
   return pcre2_code_free(code);
+}
+
+EMSCRIPTEN_KEEPALIVE
+int substringNumberFromName(const pcre2_code *code, const uint8_t *name)
+{
+  return pcre2_substring_number_from_name(code, name);
 }
 
 // --------------------------------------------------------------------
@@ -84,12 +83,13 @@ pcre2_match_data *createMatchData(pcre2_code *code)
 EMSCRIPTEN_KEEPALIVE
 size_t match(
     pcre2_code *code,
-    uint16_t *subject,
+    uint8_t *subject,
     PCRE2_SIZE length,
     PCRE2_SIZE offset,
+    uint32_t options,
     pcre2_match_data *matchData)
 {
-  return pcre2_match(code, subject, length, offset, 0, matchData, NULL);
+  return pcre2_match(code, subject, length, offset, options, matchData, NULL);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -98,19 +98,31 @@ void destroyMatchData(pcre2_match_data *data)
   return pcre2_match_data_free(data);
 }
 
+EMSCRIPTEN_KEEPALIVE
+uint32_t getOVectorSize(pcre2_match_data *data)
+{
+  return pcre2_get_ovector_count(data);
+}
+
+EMSCRIPTEN_KEEPALIVE
+PCRE2_SIZE* getOVectorPtr(pcre2_match_data *data)
+{
+  return pcre2_get_ovector_pointer(data);
+}
+
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_KEEPALIVE
 size_t substitute(
     pcre2_code *code,
-    uint16_t *subject,
+    uint8_t *subject,
     PCRE2_SIZE length,
     PCRE2_SIZE offset,
     pcre2_match_data *matchData,
     uint32_t options,
-    uint16_t *replacement,
+    uint8_t *replacement,
     PCRE2_SIZE rlength,
-    uint16_t *outputBuffer,
+    uint8_t *outputBuffer,
     PCRE2_SIZE outlength)
 {
   PCRE2_SIZE outlengthdest = outlength;
@@ -130,7 +142,7 @@ size_t substitute(
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_KEEPALIVE
-size_t version(uint16_t *result)
+size_t version(uint8_t *result)
 {
   return pcre2_config(PCRE2_CONFIG_VERSION, result);
 }

@@ -3,7 +3,7 @@
 # using emscripten.
 # ----------------------------------------------------------------------
 
-EMSCRIPTEN_DOCKER_RUN=docker run --rm -v $(CURDIR)/deps/build:/src -v $(CURDIR)/src/lib:/src/lib -u emscripten trzeci/emscripten:sdk-tag-1.39.4-64bit
+EMSCRIPTEN_DOCKER_RUN=docker run --rm -v $(CURDIR)/deps/build:/src:z -v $(CURDIR)/src/lib:/src/lib -u root emscripten/emsdk:2.0.31
 CC=$(EMSCRIPTEN_DOCKER_RUN) emcc
 
 export
@@ -25,19 +25,20 @@ deps:
 dist/libpcre2.js: src/lib/libpcre2.c src/lib/config.js | deps dist
 	$(CC) /src/lib/libpcre2.c \
 		-s WASM=1 \
-		-O3 \
+		-Os \
 		-g2 \
-		--pre-js /src/lib/config.js \
 		-s EXPORTED_FUNCTIONS='["_malloc", "_free"]' \
-		-s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap", "ccall", "getValue"]' \
+		-s EXPORTED_RUNTIME_METHODS='["cwrap", "ccall", "getValue"]' \
 		-s BINARYEN=1 \
 		-s FILESYSTEM=0 \
-		-s ASSERTIONS=2 \
+		-s DYNAMIC_EXECUTION=0 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s STANDALONE_WASM \
+		--no-entry \
 		-I/src/local/include \
 		-L/src/local/lib \
-		-lpcre2-16 \
-		-o libpcre2.js
-	sed -i '' 's/throw new WebAssembly.RuntimeError(what)/\/\/ throw new WebAssembly.RuntimeError(what)/' deps/build/libpcre2.js
-	cp deps/build/libpcre2.{wasm,js} dist/
+		-lpcre2-8 \
+		-o libpcre2.wasm
+	cp deps/build/libpcre2.wasm dist/
 
 # ----------------------------------------------------------------------
