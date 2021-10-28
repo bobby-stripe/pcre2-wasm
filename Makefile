@@ -3,7 +3,8 @@
 # using emscripten.
 # ----------------------------------------------------------------------
 
-EMSCRIPTEN_DOCKER_RUN=docker run --rm -v $(CURDIR)/deps/build:/src:z -v $(CURDIR)/src/lib:/src/lib -u root emscripten/emsdk:2.0.31
+EMSCRIPTEN_VERSION=2.0.32
+EMSCRIPTEN_DOCKER_RUN=docker run --rm -v $(CURDIR)/deps/build:/src:z -v $(CURDIR)/src/lib:/src/lib -u root emscripten/emsdk:$(EMSCRIPTEN_VERSION)
 CC=$(EMSCRIPTEN_DOCKER_RUN) emcc
 
 export
@@ -23,11 +24,11 @@ deps:
 # ----------------------------------------------------------------------
 
 dist/libpcre2.js: src/lib/libpcre2.c src/lib/config.js | deps dist
-	$(CC) /src/lib/libpcre2.c \
+	$(CC) \
 		-s WASM=1 \
 		-Os \
 		-g2 \
-		-s EXPORTED_FUNCTIONS='["_malloc", "_free"]' \
+		-s EXPORTED_FUNCTIONS='["_malloc", "_free","_pcre2_pattern_info_8","_pcre2_get_ovector_pointer_8","_pcre2_get_ovector_count_8","_pcre2_config_8","_pcre2_substitute_8","_pcre2_match_data_free_8","_pcre2_match_8","_pcre2_compile_8","_pcre2_get_error_message_8","_pcre2_pattern_info_8","_pcre2_substring_number_from_name_8","_pcre2_match_data_create_from_pattern_8","_pcre2_code_free_8"]' \
 		-s EXPORTED_RUNTIME_METHODS='["cwrap", "ccall", "getValue"]' \
 		-s BINARYEN=1 \
 		-s FILESYSTEM=0 \
